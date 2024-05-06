@@ -2,9 +2,15 @@
 //Fecha: 05/05/2024
 #include <WiFi.h>
 #include <ESP32Ping.h>
+#include <ESPmDNS.h>
 
-const char* ssid     = "Internet_UNL";
-const char* password = "UNL1859WiFi";
+//const char* ssid     = "Internet_UNL";
+//const char* password = "UNL1859WiFi";
+const char* ssid     = "iPhone 15";
+const char* password = "samael30.";
+
+unsigned long tiempo_conexion = 0;
+unsigned long tiempo_transcurrido = 0;
 
 String modoOperacion(){
   switch (WiFi.getMode()) {
@@ -54,13 +60,14 @@ void obtener_estadisticas(){
   
   Serial.println("[*][*] Estadísticas de la conexión [*][*]");
 
-  IPAddress ip_objetivo(192,168,100,1);
+  IPAddress ip_objetivo(172,20,10,1);
   int tamanio_paquete = 32;
   int paquetes_enviados = 0;
   int paquetes_recibidos = 0;
   int paquetes_perdidos = 0;
   int errores_transmicion = 0;
   int errores_recepcion = 0;
+  unsigned long tiempo_inicial = millis();
 
   if(Ping.ping(ip_objetivo, tamanio_paquete)){
     paquetes_recibidos++;
@@ -70,6 +77,8 @@ void obtener_estadisticas(){
     errores_transmicion++;
   }
   paquetes_enviados = paquetes_recibidos + paquetes_perdidos;
+  tiempo_transcurrido = millis() - tiempo_inicial;
+  tiempo_conexion += tiempo_transcurrido;
 
   Serial.println("[+] Cantidad de paquetes envíados : " + String(paquetes_enviados));
   Serial.println("[+] Cantidad de paquetes recibidos : " + String(paquetes_recibidos));
@@ -77,12 +86,12 @@ void obtener_estadisticas(){
   Serial.println("[+] Cantidad de errores en la transmisión : " + String(errores_transmicion));
   Serial.println("[+] Cantidad de errores en la recepción : " + String(errores_recepcion));
   Serial.println("[+] Cantidad de bytes transferidos : " + String(tamanio_paquete));
-  Serial.println("[+] Tiempo de conexión activa : " + String(Ping.averageTime()) + " segundos");
+  Serial.println("[+] Tiempo de conexión activa : " + String(tiempo_conexion/1000) + " segundos");
 }
-
 void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
+
   WiFi.begin(ssid, password);
   Serial.print("\nConectando a ");
   Serial.println(ssid);
@@ -91,6 +100,7 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nConectado a la red WiFi!");
+
   obtener_detalles_conexion();
   obtener_info_ap();
   obtener_estadisticas();
